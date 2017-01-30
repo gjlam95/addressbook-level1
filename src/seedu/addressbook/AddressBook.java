@@ -133,6 +133,12 @@ public class AddressBook {
     private static final String COMMAND_EXIT_DESC = "Exits the program.";
     private static final String COMMAND_EXIT_EXAMPLE = COMMAND_EXIT_WORD;
 
+    private static final String COMMAND_SORT_WORD = "sort";
+    private static final String COMMAND_SORT_DESC = "List the persons in alphabetical order";
+
+    private static final String COMMAND_EDIT_WORD = "edit";
+    private static final String COMMAND_EDIT_DESC = "Edit properties of a specific person";
+
     private static final String DIVIDER = "===================================================";
 
     /*
@@ -388,6 +394,13 @@ public class AddressBook {
 	    return getUsageInfoForAllCommands();
 	case COMMAND_EXIT_WORD:
 	    executeExitProgramRequest();
+	case COMMAND_SORT_WORD:
+	    sortPerson(ALL_PERSONS);
+	    return "";
+	case COMMAND_EDIT_WORD:
+	    editPerson(commandArgs);
+	    return "";
+
 	default:
 	    return getMessageForInvalidCommandInput(commandType, getUsageInfoForAllCommands());
 	}
@@ -1050,12 +1063,12 @@ public class AddressBook {
 
 	// phone is last arg, target is from prefix to end of string
 	if (indexOfPhonePrefix > indexOfEmailPrefix) {
-	    return removePrefixSign(encoded.substring(indexOfPhonePrefix, encoded.length()).trim(),
+	    return removePrefix(encoded.substring(indexOfPhonePrefix, encoded.length()).trim(),
 		    PERSON_DATA_PREFIX_PHONE);
 
 	    // phone is middle arg, target is from own prefix to next prefix
 	} else {
-	    return removePrefixSign(encoded.substring(indexOfPhonePrefix, indexOfEmailPrefix).trim(),
+	    return removePrefix(encoded.substring(indexOfPhonePrefix, indexOfEmailPrefix).trim(),
 		    PERSON_DATA_PREFIX_PHONE);
 	}
     }
@@ -1073,12 +1086,12 @@ public class AddressBook {
 
 	// email is last arg, target is from prefix to end of string
 	if (indexOfEmailPrefix > indexOfPhonePrefix) {
-	    return removePrefixSign(encoded.substring(indexOfEmailPrefix, encoded.length()).trim(),
+	    return removePrefix(encoded.substring(indexOfEmailPrefix, encoded.length()).trim(),
 		    PERSON_DATA_PREFIX_EMAIL);
 
 	    // email is middle arg, target is from own prefix to next prefix
 	} else {
-	    return removePrefixSign(encoded.substring(indexOfEmailPrefix, indexOfPhonePrefix).trim(),
+	    return removePrefix(encoded.substring(indexOfEmailPrefix, indexOfPhonePrefix).trim(),
 		    PERSON_DATA_PREFIX_EMAIL);
 	}
     }
@@ -1199,16 +1212,14 @@ public class AddressBook {
      */
 
     /**
-     * Removes sign(p/, d/, etc) from parameter string
-     *
-     * @param s
-     *            Parameter as a string
-     * @param sign
-     *            Parameter sign to be removed
-     * @return string without the sign
+     * Removes prefix from the given fullString if prefix occurs at the start of
+     * the string.
      */
-    private static String removePrefixSign(String s, String sign) {
-	return s.replace(sign, "");
+    private static String removePrefix(String fullString, String prefix) {
+	if (fullString.startsWith(prefix))
+	    fullString = fullString.replace(prefix, "");
+
+	return fullString;
     }
 
     /**
@@ -1223,4 +1234,45 @@ public class AddressBook {
 	return new ArrayList<>(Arrays.asList(toSplit.trim().split("\\s+")));
     }
 
+    /**
+     * Sort and list the persons in the address book in alphabetical order
+     * 
+     * @param person
+     */
+    private static void sortPerson(ArrayList<String[]> person) {
+	ArrayList<String> sorted = new ArrayList<String>();
+	for (int i = 0; i < person.size(); i++) {
+	    String[] temp = person.get(i);
+	    sorted.add(temp[0]);
+	}
+
+	Collections.sort(sorted);
+
+	for (String counter : sorted)
+	    System.out.println(counter);
+    }
+
+    /**
+     * Edit properties of a specific person
+     * 
+     * @param person
+     * @param num
+     * @param value
+     */
+    private static void editPerson(String commandArgs) {
+	final Set<String> keywords = extractKeywordsFromFindPersonArgs(commandArgs);
+	final ArrayList<String[]> personsFound = getPersonsWithNameContainingAnyKeyword(keywords);
+	
+	Scanner sc = new Scanner(System.in);
+	System.out.println("Name = '0'");
+	System.out.println("Phone = '1'");
+	System.out.println("Email = '2'");
+	System.out.println("Enter property:");
+	int num = sc.nextInt();
+	System.out.println("Enter value:");
+	sc.nextLine();
+	String value = sc.nextLine();
+	String[] temp = personsFound.get(personsFound.size()-1);
+	temp[num] = value;
+    }
 }
